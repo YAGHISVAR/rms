@@ -122,6 +122,18 @@ function doLogout(){
 
 /* ── NAVIGATION ─────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function(){
+  // Wipe any old pre-Supabase session data
+  if(localStorage.getItem('rms_data')){
+    localStorage.removeItem('rms_data');
+    localStorage.removeItem('rms_session');
+  }
+  // If app version changed, clear session to force re-login
+  var storedVer=localStorage.getItem('rms_ver');
+  if(storedVer!=='supabase-1'){
+    localStorage.removeItem('rms_session');
+    localStorage.setItem('rms_ver','supabase-1');
+  }
+
   // Try restore session
   var saved=getSavedSession();
   if(saved){

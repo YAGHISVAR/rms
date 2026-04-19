@@ -10,32 +10,13 @@
 // ── DEFAULT DATA (used only on first load) ──────────────────
 
 var DEFAULT_USERS = [
-  { id:'USR-0001', name:'Arjun R.',  username:'master', password:'master123', team:'—',     role:'master' },
-  { id:'USR-0002', name:'Priya S.',  username:'priya',  password:'admin123',  team:'ALPHA',  role:'admin'  },
-  { id:'USR-0003', name:'Kiran M.',  username:'kiran',  password:'admin123',  team:'BETA',   role:'admin'  },
-  { id:'USR-0004', name:'Ravi T.',   username:'ravi',   password:'pass123',   team:'GAMMA',  role:'member' },
-  { id:'USR-0005', name:'Sneha L.',  username:'sneha',  password:'pass123',   team:'ALPHA',  role:'member' },
-  { id:'USR-0006', name:'Dev P.',    username:'dev',    password:'pass123',   team:'BETA',   role:'member' },
-  { id:'USR-0007', name:'Arun K.',   username:'arun',   password:'pass123',   team:'DELTA',  role:'member' },
-  { id:'USR-0008', name:'Meera J.',  username:'meera',  password:'pass123',   team:'SIGMA',  role:'member' },
-  // ── Add more users here ──
-  // { id:'USR-0009', name:'Name Here', username:'username', password:'password', team:'ALPHA', role:'member' },
+  { id:'USR-0001', name:'Master Admin', username:'master', password:'rmi_pinnacle', team:'—', role:'master' },
+  // ── Add more users here (use the app as Master Admin) ──
+  // { id:'USR-0002', name:'Name Here', username:'username', password:'password', team:'ALPHA', role:'member' },
 ];
 
 var DEFAULT_INVENTORY = [
-  { id:'INV-001', name:'Servo SG90',          qty:20,  unit:'pcs', cat:'Electronics' },
-  { id:'INV-002', name:'Arduino Mega',         qty:5,   unit:'pcs', cat:'Electronics' },
-  { id:'INV-003', name:'L298N Motor Driver',   qty:8,   unit:'pcs', cat:'Electronics' },
-  { id:'INV-004', name:'LiPo 3S Battery',      qty:3,   unit:'pcs', cat:'Power'       },
-  { id:'INV-005', name:'Aluminium Sheet 1mm',  qty:10,  unit:'m',   cat:'Materials'   },
-  { id:'INV-006', name:'M3 Bolts',             qty:200, unit:'pcs', cat:'Fasteners'   },
-  { id:'INV-007', name:'Ultrasonic HC-SR04',   qty:12,  unit:'pcs', cat:'Sensors'     },
-  { id:'INV-008', name:'IR Sensor',            qty:15,  unit:'pcs', cat:'Sensors'     },
-  { id:'INV-009', name:'12V DC Motor',         qty:6,   unit:'pcs', cat:'Electronics' },
-  { id:'INV-010', name:'Steel Rod 10mm',       qty:5,   unit:'m',   cat:'Materials'   },
-  { id:'INV-011', name:'Soldering Wire',       qty:500, unit:'g',   cat:'Tools'       },
-  { id:'INV-012', name:'Jumper Wires',         qty:100, unit:'pcs', cat:'Electronics' },
-  // ── Add more components here ──
+  // ── Add components using the app (INV MGMT tab) ──
 ];
 
 var DEFAULT_LINKS = [
@@ -72,7 +53,7 @@ function loadData() {
       tasks       = d.tasks        || [];
       treasury    = d.treasury     || [];
       links       = d.links        || DEFAULT_LINKS;
-      userCount   = d.userCount    || USERS.length;
+      userCount   = d.userCount    || 1;
     } catch(e) {
       resetToDefaults();
     }
@@ -100,7 +81,7 @@ function resetToDefaults() {
   tasks        = [];
   treasury     = [];
   links        = JSON.parse(JSON.stringify(DEFAULT_LINKS));
-  userCount    = USERS.length;
+  userCount    = 1;
   saveData();
 }
 

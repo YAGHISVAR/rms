@@ -787,3 +787,54 @@ document.addEventListener('DOMContentLoaded', function() {
 
   renderAll();
 });
+
+// ── AUTO UPDATE CHECKER ──────────────────────────────────────
+// Checks every 60 seconds if a new version is deployed.
+// If yes, shows a banner prompting the user to refresh.
+(function() {
+  var APP_VERSION = '1.0';
+  var CHECK_INTERVAL = 60000; // check every 60 seconds
+
+  function checkForUpdate() {
+    fetch('/js/data.js?cachebust=' + Date.now())
+      .then(function(r) { return r.text(); })
+      .then(function(text) {
+        // Look for version comment in data.js
+        var match = text.match(/APP_VERSION\s*=\s*'([^']+)'/);
+        if (match && match[1] !== APP_VERSION) {
+          showUpdateBanner();
+        }
+      })
+      .catch(function() {}); // silently fail if offline
+  }
+
+  function showUpdateBanner() {
+    if (document.getElementById('updateBanner')) return; // already showing
+    var banner = document.createElement('div');
+    banner.id = 'updateBanner';
+    banner.style.cssText = [
+      'position:fixed','bottom:16px','left:50%','transform:translateX(-50%)',
+      'background:#2E3A52','border:1px solid #4A8FE8','border-radius:8px',
+      'padding:10px 16px','display:flex','align-items:center','gap:12px',
+      'z-index:9999','font-family:Courier New,monospace','font-size:10px',
+      'color:#E8EDF5','box-shadow:0 4px 20px rgba(0,0,0,0.4)'
+    ].join(';');
+    banner.innerHTML =
+      '<span style="color:#4A8FE8;">↑</span>' +
+      '<span>New version available</span>' +
+      '<button onclick="window.location.reload(true)" style="'+
+        'background:#4A8FE8;color:#fff;border:none;border-radius:5px;'+
+        'padding:4px 12px;font-size:9px;cursor:pointer;font-family:inherit;font-weight:700;'+
+      '">UPDATE NOW</button>' +
+      '<button onclick="this.parentElement.remove()" style="'+
+        'background:transparent;color:#5E7499;border:none;cursor:pointer;font-size:11px;'+
+      '">✕</button>';
+    document.body.appendChild(banner);
+  }
+
+  // Start checking after 30 seconds, then every 60 seconds
+  setTimeout(function() {
+    checkForUpdate();
+    setInterval(checkForUpdate, CHECK_INTERVAL);
+  }, 30000);
+})();

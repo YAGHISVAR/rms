@@ -9,6 +9,12 @@
 <meta name="theme-color" content="#1C2132"/>
 </head>
 <body>
+<!-- GLOBAL LOADER -->
+<div id="globalLoader" style="display:none;position:fixed;inset:0;background:rgba(28,33,50,0.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+  <svg width="40" height="40" viewBox="0 0 60 60"><polygon points="30,3 56,16 56,44 30,57 4,44 4,16" fill="#2A3450" stroke="#4A5F82" stroke-width="1.5"/><polygon points="30,14 46,22 46,38 30,46 14,38 14,22" fill="#1C2132" stroke="#4A8FE8" stroke-width="1"/><circle cx="30" cy="30" r="4" fill="#4A8FE8"><animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/></circle></svg>
+  <div style="font-size:10px;color:#5E7499;letter-spacing:2px;font-family:Courier New,monospace;">LOADING...</div>
+</div>
+
 <div class="app" id="appRoot">
 
   <!-- LOGIN -->

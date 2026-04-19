@@ -1,140 +1,120 @@
 /* ============================================================
-   RMS — data.js
-   All app data lives here. Edit this file to:
-   - Add/remove users
-   - Pre-load inventory
-   - Add default links
-   Data is saved to localStorage so it persists between sessions.
+   RMS — data.js  |  Supabase Cloud Database
+   All data is now stored in Supabase — shared across all devices.
    ============================================================ */
 
-// ── DEFAULT DATA (used only on first load) ──────────────────
+var SUPABASE_URL = 'https://ejhocvrxgznjypqyhujv.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqaG9jdnJ4Z3puanlwcXlodWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MTQ0OTAsImV4cCI6MjA5MjE5MDQ5MH0.IGzMVlfBAnlnyPR2GLYzDgRyNCsZ3Faky2fjRyrggfo';
 
-var DEFAULT_USERS = [
-  { id:'USR-0001', name:'Master Admin', username:'master', password:'rmi_pinnacle', team:'—', role:'master' },
-  // ── Add more users here (use the app as Master Admin) ──
-  // { id:'USR-0002', name:'Name Here', username:'username', password:'password', team:'ROVIO', role:'member' },
-];
-
-var DEFAULT_INVENTORY = [
-  // ── Add components using the app (INV MGMT tab) ──
-];
-
-var DEFAULT_LINKS = [
-  { id:'LK-001', title:'Reimbursement Form',   url:'https://forms.google.com', desc:'Submit reimbursement requests', cat:'Finance'     },
-  { id:'LK-002', title:'Bill Submission',       url:'https://drive.google.com', desc:'Upload bills and receipts',     cat:'Finance'     },
-  { id:'LK-003', title:'Alumni Network',        url:'https://linkedin.com',     desc:'Connect with RMI alumni',       cat:'Alumni'      },
-  { id:'LK-004', title:'Competition Resources', url:'https://robocon.in',       desc:'ABU Robocon official site',     cat:'Competition' },
-  // ── Add more links here ──
-];
-
-var TEAM_NAMES = [
-  'ROVIO','DRONE','BARNES','AMR','CORE','OMEGA'
-];
+var TEAM_NAMES = ['ROVIO','DRONE','BARNES','AMR','CORE','OMEGA'];
 
 var TEAM_COLORS = {
   ROVIO:'#4A8FE8', DRONE:'#2EAA82', BARNES:'#D4920A',
   AMR:'#E05252',   CORE:'#9B6FD4',  OMEGA:'#2EA8C4',
-  ALPHA:'#4A8FE8', BETA:'#2EAA82',  GAMMA:'#D4920A', DELTA:'#E05252',
-  SIGMA:'#9B6FD4', ZETA:'#D4629B',  ETA:'#5EAA3C',
-  THETA:'#C47A2E', IOTA:'#4A70C8',  KAPPA:'#2E9E7A', LAMBDA:'#C45252'
+  ALPHA:'#4A8FE8', BETA:'#2EAA82',  GAMMA:'#D4920A',
+  DELTA:'#E05252', SIGMA:'#9B6FD4', ZETA:'#D4629B',
+  ETA:'#5EAA3C',   THETA:'#C47A2E', IOTA:'#4A70C8',
+  KAPPA:'#2E9E7A', LAMBDA:'#C45252'
 };
 
-// ── ROLE HIERARCHY ───────────────────────────────────────────
-// Four levels: master > admin > manager > member
-// Master can edit what each role can do (except master itself).
-// Permissions are stored and editable from the Users panel.
-
-var DEFAULT_ROLE_PERMISSIONS = {
-  admin: {
-    label:        'Admin',
-    canApproveTreasury:  true,
-    canManageInventory:  true,
-    canModerateTasks:    true,
-    canAddLinks:         true,
-    canViewAllTreasury:  true,
-    canViewAllTeams:     true,
-  },
-  manager: {
-    label:        'Manager',
-    canApproveTreasury:  false,
-    canManageInventory:  true,
-    canModerateTasks:    false,
-    canAddLinks:         false,
-    canViewAllTreasury:  false,
-    canViewAllTeams:     true,
-  },
-  member: {
-    label:        'Member',
-    canApproveTreasury:  false,
-    canManageInventory:  false,
-    canModerateTasks:    false,
-    canAddLinks:         false,
-    canViewAllTreasury:  false,
-    canViewAllTeams:     true,
-  }
-};
-
-// ── PERSISTENT STORAGE ──────────────────────────────────────
-// Data is saved to localStorage so it survives page refresh.
-// On first visit, DEFAULT data is loaded.
-
-function loadData() {
-  var raw = localStorage.getItem('rms_data');
-  if (raw) {
-    try {
-      var d        = JSON.parse(raw);
-      USERS        = d.users        || DEFAULT_USERS;
-      inventory    = d.inventory    || DEFAULT_INVENTORY;
-      transactions = d.transactions || [];
-      tasks        = d.tasks        || [];
-      treasury     = d.treasury     || [];
-      links        = d.links        || DEFAULT_LINKS;
-      userCount    = d.userCount    || 1;
-      rolePerms    = d.rolePerms    || JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS));
-    } catch(e) {
-      resetToDefaults();
+function sbFetch(method, table, body, query) {
+  var url = SUPABASE_URL + '/rest/v1/' + table + (query ? '?' + query : '');
+  var opts = {
+    method: method,
+    headers: {
+      'apikey':        SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type':  'application/json',
+      'Prefer':        method === 'POST' ? 'return=representation' : 'return=minimal'
     }
-  } else {
-    resetToDefaults();
-  }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(url, opts).then(function(r) {
+    return r.text().then(function(t) {
+      if (!t) return [];
+      try { return JSON.parse(t); } catch(e) { return []; }
+    });
+  });
 }
 
-function saveData() {
-  localStorage.setItem('rms_data', JSON.stringify({
-    users:        USERS,
-    inventory:    inventory,
-    transactions: transactions,
-    tasks:        tasks,
-    treasury:     treasury,
-    links:        links,
-    userCount:    userCount,
-    rolePerms:    rolePerms
-  }));
-}
+function sbGet(table, query)     { return sbFetch('GET',   table, null, query || 'order=id'); }
+function sbPost(table, body)     { return sbFetch('POST',  table, body); }
+function sbPatch(table, body, q) { return sbFetch('PATCH', table, body, q); }
+function sbDelete(table, query)  { return sbFetch('DELETE',table, null, query); }
 
-function resetToDefaults() {
-  USERS        = JSON.parse(JSON.stringify(DEFAULT_USERS));
-  inventory    = JSON.parse(JSON.stringify(DEFAULT_INVENTORY));
-  transactions = [];
-  tasks        = [];
-  treasury     = [];
-  links        = JSON.parse(JSON.stringify(DEFAULT_LINKS));
-  userCount    = 1;
-  rolePerms    = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS));
-  saveData();
-}
-
-// ── LIVE DATA ARRAYS (populated by loadData) ─────────────────
 var USERS        = [];
 var inventory    = [];
 var transactions = [];
 var tasks        = [];
 var treasury     = [];
 var links        = [];
+var rolePerms    = {};
 var userCount    = 0;
-var rolePerms    = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS));
+var cu           = null;
 
-var APP_VERSION = '1.0'; // ← bump this when you deploy updates
+function loadAllData(callback) {
+  showLoader(true);
+  Promise.all([
+    sbGet('users'),
+    sbGet('inventory'),
+    sbGet('transactions','order=created_at.desc&limit=100'),
+    sbGet('tasks'),
+    sbGet('treasury'),
+    sbGet('links'),
+    sbGet('role_perms')
+  ]).then(function(res) {
+    USERS        = res[0] || [];
+    inventory    = res[1] || [];
+    transactions = res[2] || [];
+    tasks        = res[3] || [];
+    treasury     = res[4] || [];
+    links        = res[5] || [];
+    rolePerms    = {};
+    (res[6] || []).forEach(function(rp) {
+      rolePerms[rp.role] = {
+        label:              rp.label,
+        canApproveTreasury: rp.can_approve_treasury,
+        canManageInventory: rp.can_manage_inventory,
+        canModerateTasks:   rp.can_moderate_tasks,
+        canAddLinks:        rp.can_add_links,
+        canViewAllTreasury: rp.can_view_all_treasury,
+        canViewAllTeams:    rp.can_view_all_teams
+      };
+    });
+    userCount = USERS.length;
+    showLoader(false);
+    if (callback) callback();
+  }).catch(function(e) {
+    showLoader(false);
+    console.error('Load error:', e);
+    showToast('Connection error. Check internet.', 'error');
+  });
+}
 
-// Load on startup
-loadData();
+function showLoader(show) {
+  var el = document.getElementById('globalLoader');
+  if (el) el.style.display = show ? 'flex' : 'none';
+}
+
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);' +
+    'background:'+(type==='error'?'#E05252':'#2EAA82')+';color:#fff;padding:8px 16px;' +
+    'border-radius:6px;font-size:10px;font-family:Courier New,monospace;z-index:9999;letter-spacing:0.5px;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function() { t.remove(); }, 3000);
+}
+
+function newId(prefix, arr) {
+  var max = 0;
+  arr.forEach(function(x) {
+    var n = parseInt((x.id || '').replace(prefix+'-','')) || 0;
+    if (n > max) max = n;
+  });
+  return prefix + '-' + String(max + 1).padStart(3,'0');
+}
+
+function saveSession(username) { localStorage.setItem('rms_session', username); }
+function clearSession()        { localStorage.removeItem('rms_session'); }
+function getSavedSession()     { return localStorage.getItem('rms_session'); }

@@ -721,4 +721,3 @@ function deleteUser(id){
     loadAllData(renderUsers);
   });
 }
-}

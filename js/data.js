@@ -11,6 +11,7 @@
 
 var DEFAULT_USERS = [
   { id:'USR-0001', name:'Master Admin', username:'master', password:'rmi_pinnacle', team:'—', role:'master' },
+  { id:'USR-0002', name:'Yaghisvar', username:'yaghisvar', password:'yagi123', team:'CORE', role:'admin' },
   // ── Add more users here (use the app as Master Admin) ──
   // { id:'USR-0002', name:'Name Here', username:'username', password:'password', team:'ROVIO', role:'member' },
 ];
@@ -28,7 +29,7 @@ var DEFAULT_LINKS = [
 ];
 
 var TEAM_NAMES = [
-  'ROVIO','DRONE','BARNES','AMR','CORE','OMEGA'
+  'ROVIO','DRONE','BARNES','AMR','CORE','OMEGA',
 ];
 
 var TEAM_COLORS = {

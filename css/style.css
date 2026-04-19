@@ -200,16 +200,80 @@ tr:hover td { background: var(--sur2); }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--bdr); border-radius: 2px; }
 
+/* ── HAMBURGER BUTTON ── */
+.ham-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r);
+  cursor: pointer;
+  flex-shrink: 0;
+  z-index: 200;
+}
+.ham-btn span {
+  display: block;
+  width: 16px;
+  height: 2px;
+  background: var(--tx2);
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+.ham-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.ham-btn.open span:nth-child(2) { opacity: 0; }
+.ham-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── SIDEBAR OVERLAY (mobile) ── */
+.sb-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 149;
+}
+.sb-overlay.show { display: block; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
-  .sb { width: 160px; }
   .mcs4 { grid-template-columns: repeat(2, 1fr); }
   .fr4 { grid-template-columns: 1fr 1fr; }
   .kan { grid-template-columns: 1fr; }
   .tl { grid-template-columns: 1fr 1fr; }
 }
-@media (max-width: 480px) {
-  .sb { display: none; }
+
+@media (max-width: 600px) {
+  /* Show hamburger */
+  .ham-btn { display: flex; }
+
+  /* Sidebar slides in from left, hidden by default */
+  .sb {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    z-index: 150;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    width: 220px;
+  }
+  .sb.open { transform: translateX(0); }
+
+  /* Main fills full width */
+  .mn { width: 100%; }
+
+  /* Forms stack on mobile */
   .fr2, .fr3, .fr4 { grid-template-columns: 1fr; }
   .mcs, .mcs4 { grid-template-columns: 1fr 1fr; }
+
+  /* Topbar gets hamburger */
+  .tpb { gap: 8px; }
+  .tpb-s { display: none; }
+  .tpb-d { display: none; }
+
+  /* Modal fits screen */
+  .mb { width: calc(100vw - 32px); max-width: 340px; }
 }

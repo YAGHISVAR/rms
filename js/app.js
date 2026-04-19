@@ -2,10 +2,24 @@
    RMS — app.js  |  All application logic
    ============================================================ */
 
-var cu         = null;   // current logged-in user
-var borrowId   = null;   // component being borrowed
-var doneTaskId = null;   // task being marked done
-var selTeam    = null;   // selected team in work log
+var cu         = null;
+var borrowId   = null;
+var doneTaskId = null;
+var selTeam    = null;
+
+function toggleSidebar() {
+  var sb=document.querySelector(".sb"),overlay=document.getElementById("sbOverlay"),btn=document.getElementById("hamBtn");
+  if(!sb)return;
+  var isOpen=sb.classList.contains("open");
+  if(isOpen){sb.classList.remove("open");overlay.classList.remove("show");btn.classList.remove("open");}
+  else{sb.classList.add("open");overlay.classList.add("show");btn.classList.add("open");}
+}
+function closeSidebarOnMobile(){
+  if(window.innerWidth<=600){
+    var sb=document.querySelector(".sb"),overlay=document.getElementById("sbOverlay"),btn=document.getElementById("hamBtn");
+    if(sb)sb.classList.remove("open");if(overlay)overlay.classList.remove("show");if(btn)btn.classList.remove("open");
+  }
+}
 
 // ── HELPERS ─────────────────────────────────────────────────
 
@@ -74,6 +88,7 @@ function doLogin() {
   if (!u) { document.getElementById('lErr').textContent = 'Invalid username or password.'; return; }
 
   cu = u;
+  localStorage.setItem('rms_session', u.username);
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('mainApp').style.display     = 'flex';
 
@@ -105,6 +120,7 @@ function doLogin() {
 
 function doLogout() {
   cu = null; selTeam = null;
+  localStorage.removeItem('rms_session');
   document.getElementById('mainApp').style.display    = 'none';
   document.getElementById('loginScreen').style.display= 'flex';
   ['nUS','nIM','nTR','aNL','mNL'].forEach(function(id) {
@@ -122,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.ni').forEach(function(el) {
     el.addEventListener('click', function() {
       var panel = el.getAttribute('data-panel');
-      if (panel) goto(panel, el);
+      if (panel) { goto(panel, el); closeSidebarOnMobile(); }
     });
   });
   // Enter key on login
@@ -675,3 +691,43 @@ function deleteUser(id) {
   USERS = USERS.filter(function(u) { return u.id !== id; });
   saveData(); renderUsers();
 }
+
+// ── AUTO RESTORE SESSION ON PAGE LOAD ───────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var savedUN = localStorage.getItem('rms_session');
+  if (!savedUN) return;
+
+  // Find the user from saved username
+  var u = USERS.filter(function(x) { return x.username === savedUN; })[0];
+  if (!u) { localStorage.removeItem('rms_session'); return; }
+
+  // Restore session silently
+  cu = u;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display     = 'flex';
+
+  document.getElementById('sbNm').textContent = u.name;
+  var mt = document.getElementById('sbMt');
+  if (isMaster())     { mt.style.color = 'var(--gd)'; mt.textContent = 'MASTER ADMIN'; }
+  else if (isAdmin()) { mt.style.color = 'var(--ac)'; mt.textContent = 'ADMIN — ' + u.team; }
+  else                { mt.style.color = 'var(--tx3)'; mt.textContent = 'MEMBER — ' + u.team; }
+  document.getElementById('sbId').textContent = '@' + u.username;
+
+  if (isAdmin()) {
+    document.getElementById('aNL').style.display = 'block';
+    document.getElementById('nIM').style.display = 'flex';
+    document.getElementById('nTR').style.display = 'flex';
+    populateTrFilters();
+  }
+  if (isMaster()) {
+    document.getElementById('mNL').style.display = 'block';
+    document.getElementById('nUS').style.display = 'flex';
+  }
+  document.getElementById('linkFormWrap').style.display = isAdmin() ? 'block' : 'none';
+
+  var ut = document.getElementById('ut');
+  ut.innerHTML = '';
+  TEAM_NAMES.forEach(function(t) { var o = document.createElement('option'); o.textContent = t; ut.appendChild(o); });
+
+  renderAll();
+});

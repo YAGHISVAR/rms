@@ -77,15 +77,34 @@ function TEAMS(){
 }
 
 /* ── AUTH ────────────────────────────────────────────────── */
+// Login queries Supabase directly — no dependency on local USERS array
 function doLogin(){
   var un=document.getElementById('lUn').value.trim().toLowerCase();
   var pw=document.getElementById('lPw').value;
-  var u=USERS.filter(function(x){return x.username===un&&x.password===pw;})[0];
-  if(!u){document.getElementById('lErr').textContent='Invalid username or password.';return;}
-  cu=u;
-  saveSession(u.username);
-  showMainApp(u);
-  loadAllData(renderAll);
+  if(!un||!pw){document.getElementById('lErr').textContent='Enter username and password.';return;}
+  document.getElementById('lErr').textContent='';
+  showLoader(true);
+
+  // Fetch this specific user from Supabase
+  sbGet('users','username=eq.'+encodeURIComponent(un)).then(function(res){
+    showLoader(false);
+    if(!res||!res.length){
+      document.getElementById('lErr').textContent='Invalid username or password.';
+      return;
+    }
+    var u=res[0];
+    if(u.password!==pw){
+      document.getElementById('lErr').textContent='Invalid username or password.';
+      return;
+    }
+    cu=u;
+    saveSession(u.username);
+    showMainApp(u);
+    loadAllData(renderAll);
+  }).catch(function(){
+    showLoader(false);
+    document.getElementById('lErr').textContent='Connection error. Check internet.';
+  });
 }
 
 function showMainApp(u){
@@ -93,24 +112,33 @@ function showMainApp(u){
   document.getElementById('mainApp').style.display='flex';
   document.getElementById('sbNm').textContent=u.name;
   var mt=document.getElementById('sbMt');
-  if(isMaster())           {mt.style.color='var(--gd)'; mt.textContent='MASTER ADMIN';}
-  else if(isAdmin())       {mt.style.color='var(--ac)'; mt.textContent='ADMIN — '+u.team;}
+  if(isMaster())             {mt.style.color='var(--gd)'; mt.textContent='MASTER ADMIN';}
+  else if(isAdmin())         {mt.style.color='var(--ac)'; mt.textContent='ADMIN — '+u.team;}
   else if(u.role==='manager'){mt.style.color='var(--gn)'; mt.textContent='MANAGER — '+u.team;}
-  else                     {mt.style.color='var(--tx3)';mt.textContent='MEMBER — '+u.team;}
+  else                       {mt.style.color='var(--tx3)';mt.textContent='MEMBER — '+u.team;}
   document.getElementById('sbId').textContent='@'+u.username;
   if(isAdmin()||hasPerm('canManageInventory')){
     document.getElementById('aNL').style.display='block';
     document.getElementById('nIM').style.display='flex';
   }
-  if(isAdmin()){document.getElementById('nTR').style.display='flex'; populateTrFilters();}
-  if(isMaster()){document.getElementById('mNL').style.display='block'; document.getElementById('nUS').style.display='flex';}
+  if(isAdmin()){
+    document.getElementById('nTR').style.display='flex';
+    populateTrFilters();
+  }
+  if(isMaster()){
+    document.getElementById('mNL').style.display='block';
+    document.getElementById('nUS').style.display='flex';
+  }
   document.getElementById('linkFormWrap').style.display=hasPerm('canAddLinks')?'block':'none';
   var ut=document.getElementById('ut'); ut.innerHTML='';
   TEAM_NAMES.forEach(function(t){var o=document.createElement('option');o.textContent=t;ut.appendChild(o);});
 }
 
 function doLogout(){
-  cu=null; selTeam=null; clearSession();
+  cu=null; selTeam=null;
+  clearSession();
+  // Reset all data
+  USERS=[]; inventory=[]; transactions=[]; tasks=[]; treasury=[]; links=[]; rolePerms={};
   document.getElementById('mainApp').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   ['nUS','nIM','nTR','aNL','mNL'].forEach(function(id){document.getElementById(id).style.display='none';});
@@ -122,19 +150,10 @@ function doLogout(){
 
 /* ── NAVIGATION ─────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function(){
-  // Wipe any old pre-Supabase session data
-  if(localStorage.getItem('rms_data')){
-    localStorage.removeItem('rms_data');
-    localStorage.removeItem('rms_session');
-  }
-  // If app version changed, clear session to force re-login
-  var storedVer=localStorage.getItem('rms_ver');
-  if(storedVer!=='supabase-1'){
-    localStorage.removeItem('rms_session');
-    localStorage.setItem('rms_ver','supabase-1');
-  }
+  // Clear any old localStorage data from pre-Supabase version
+  localStorage.removeItem('rms_data');
 
-  // Try restore session
+  // Try restore session — fetch user fresh from Supabase
   var saved=getSavedSession();
   if(saved){
     showLoader(true);
@@ -148,7 +167,10 @@ document.addEventListener('DOMContentLoaded', function(){
         clearSession();
         showLoader(false);
       }
-    }).catch(function(){ clearSession(); showLoader(false); });
+    }).catch(function(){
+      clearSession();
+      showLoader(false);
+    });
   }
 
   document.querySelectorAll('.ni').forEach(function(el){
@@ -183,10 +205,10 @@ function renderAll(){ renderDash(); renderInv(); renderInvMgmt(); renderTReview(
 /* ── DASHBOARD ──────────────────────────────────────────── */
 function renderDash(){
   var rb=document.getElementById('roleBanner');
-  if(isMaster())         rb.innerHTML='<div class="rb rb-m">⬡ MASTER ADMIN — Full system access</div>';
-  else if(isAdmin())     rb.innerHTML='<div class="rb rb-a">◈ ADMIN — Full access except user management</div>';
+  if(isMaster())               rb.innerHTML='<div class="rb rb-m">⬡ MASTER ADMIN — Full system access</div>';
+  else if(isAdmin())           rb.innerHTML='<div class="rb rb-a">◈ ADMIN — Full access except user management</div>';
   else if(cu&&cu.role==='manager') rb.innerHTML='<div class="rb" style="background:var(--gnbg);border:1px solid rgba(46,170,130,0.3);color:var(--gn);">◉ MANAGER — Inventory + member access</div>';
-  else                   rb.innerHTML='<div class="rb rb-u">◎ MEMBER — Your team dashboard</div>';
+  else                         rb.innerHTML='<div class="rb rb-u">◎ MEMBER — Your team dashboard</div>';
 
   var dc=document.getElementById('dashContent');
   if(!isAdmin()){
@@ -211,7 +233,8 @@ function renderDash(){
       '<div class="sc">RECENT TEAM TASKS</div>'+
       '<div class="tw"><table><thead><tr><th>TASK</th><th>BY</th><th>STATUS</th><th>COMPLETED</th></tr></thead><tbody>'+
       tasks.filter(function(t){return t.team===tm;}).slice(0,6).map(function(t){
-        return '<tr><td>'+t.task+'</td><td>'+t.user_name+'</td><td>'+stBdg(t.status)+'</td><td style="font-size:8px;color:var(--tx3);">'+(t.completed_at||'—')+'</td></tr>';
+        return '<tr><td>'+t.task+'</td><td>'+t.user_name+'</td><td>'+stBdg(t.status)+'</td>'+
+          '<td style="font-size:8px;color:var(--tx3);">'+(t.completed_at||'—')+'</td></tr>';
       }).join('')+'</tbody></table></div>';
   } else {
     dc.innerHTML=
@@ -417,7 +440,6 @@ function renderTeamView(el,tm){
   h+='<div class="kan">';
   cols.forEach(function(cfg){
     var col=tasks.filter(function(t){return t.team===tm&&t.status===cfg.st;});
-    var nxtMap={upcoming:'→ Working RN',working:'→ Mark Done',done:'→ Reopen'};
     h+='<div class="kc" style="border-top:2px solid '+cfg.bc+';"><div class="kch" style="color:'+cfg.hc+';">'+cfg.label+' ('+col.length+')</div>';
     col.forEach(function(t){
       var isOwn=cu&&cu.id===t.user_id;

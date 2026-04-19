@@ -155,13 +155,16 @@
             </div>
             <div class="fr3">
               <div class="fg"><label>ASSIGN TEAM</label><select id="ut"></select></div>
-              <div class="fg"><label>ROLE</label><select id="ur"><option value="member">MEMBER</option><option value="admin">ADMIN</option></select></div>
+              <div class="fg"><label>ROLE</label><select id="ur"><option value="member">MEMBER</option><option value="manager">MANAGER</option><option value="admin">ADMIN</option></select></div>
               <div style="display:flex;align-items:flex-end;"><button class="btn" onclick="createUser()">CREATE</button></div>
             </div>
             <div id="ucMsg" style="font-size:9px;color:var(--gn);margin-top:6px;min-height:13px;"></div>
           </div>
           <div class="sc">ALL USERS — CREDENTIALS VISIBLE TO MASTER ADMIN ONLY</div>
-          <div class="tw"><table><thead><tr><th>USERNAME</th><th>NAME</th><th>PASSWORD</th><th>TEAM</th><th>ROLE</th><th>CHANGE TEAM</th><th></th></tr></thead><tbody id="uTbl"></tbody></table></div>
+          <div class="tw"><table><thead><tr><th>USERNAME</th><th>NAME</th><th>PASSWORD</th><th>TEAM</th><th>ROLE</th><th>CHANGE TEAM</th><th>CHANGE ROLE</th><th></th></tr></thead><tbody id="uTbl"></tbody></table></div>
+
+          <div class="sc" style="margin-top:16px;">ROLE PERMISSIONS — EDIT WHAT EACH ROLE CAN DO</div>
+          <div id="rolePermsPanel"></div>
         </div>
       </div>
     </div>

@@ -30,8 +30,9 @@ function tb(t)  {
 }
 
 function rb(r) {
-  if (r==='master') return '<span class="bdg b-ma">MASTER</span>';
-  if (r==='admin')  return '<span class="bdg b-ad">ADMIN</span>';
+  if (r==='master')  return '<span class="bdg b-ma">MASTER</span>';
+  if (r==='admin')   return '<span class="bdg b-ad">ADMIN</span>';
+  if (r==='manager') return '<span class="bdg" style="background:var(--gnbg);color:var(--gn);">MANAGER</span>';
   return '<span class="bdg b-me">MEMBER</span>';
 }
 
@@ -64,8 +65,16 @@ function nowStr() {
     ' ' + String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
 }
 
-function isMaster() { return cu && cu.role === 'master'; }
-function isAdmin()  { return cu && (cu.role === 'admin' || cu.role === 'master'); }
+function isMaster()  { return cu && cu.role === 'master'; }
+function isAdmin()   { return cu && (cu.role === 'admin' || cu.role === 'master'); }
+function isManager() { return cu && (cu.role === 'manager' || cu.role === 'admin' || cu.role === 'master'); }
+function hasPerm(p)  {
+  if (isMaster()) return true;
+  if (!cu) return false;
+  if (cu.role === 'master') return true;
+  var rp = (typeof rolePerms !== 'undefined' && rolePerms[cu.role]) ? rolePerms[cu.role] : {};
+  return !!rp[p];
+}
 
 function TEAMS() {
   var seen = {}, out = [];
@@ -94,12 +103,13 @@ function doLogin() {
 
   document.getElementById('sbNm').textContent = u.name;
   var mt = document.getElementById('sbMt');
-  if (isMaster())      { mt.style.color = 'var(--gd)'; mt.textContent = 'MASTER ADMIN'; }
-  else if (isAdmin())  { mt.style.color = 'var(--ac)'; mt.textContent = 'ADMIN — ' + u.team; }
+  if (isMaster())       { mt.style.color = 'var(--gd)';  mt.textContent = 'MASTER ADMIN'; }
+  else if (isAdmin())   { mt.style.color = 'var(--ac)';  mt.textContent = 'ADMIN — ' + u.team; }
+  else if (cu.role==='manager') { mt.style.color = 'var(--gn)';  mt.textContent = 'MANAGER — ' + u.team; }
   else                 { mt.style.color = 'var(--tx3)'; mt.textContent = 'MEMBER — ' + u.team; }
   document.getElementById('sbId').textContent = '@' + u.username;
 
-  if (isAdmin()) {
+  if (isAdmin() || hasPerm('canManageInventory')) {
     document.getElementById('aNL').style.display  = 'block';
     document.getElementById('nIM').style.display  = 'flex';
     document.getElementById('nTR').style.display  = 'flex';
@@ -109,7 +119,7 @@ function doLogin() {
     document.getElementById('mNL').style.display  = 'block';
     document.getElementById('nUS').style.display  = 'flex';
   }
-  document.getElementById('linkFormWrap').style.display = isAdmin() ? 'block' : 'none';
+  document.getElementById('linkFormWrap').style.display = hasPerm('canAddLinks') ? 'block' : 'none';
 
   var ut = document.getElementById('ut');
   ut.innerHTML = '';
@@ -175,9 +185,11 @@ function renderAll() {
 function renderDash() {
   var rb = document.getElementById('roleBanner');
   if (isMaster())
-    rb.innerHTML = '<div class="rb rb-m">⬡ MASTER ADMIN — Full system access</div>';
+    rb.innerHTML = '<div class="rb rb-m">⬡ MASTER ADMIN — Full system access + user management</div>';
   else if (isAdmin())
     rb.innerHTML = '<div class="rb rb-a">◈ ADMIN — Full access except user management</div>';
+  else if (cu && cu.role==="manager")
+    rb.innerHTML = '<div class="rb" style="background:var(--gnbg);border:1px solid rgba(46,170,130,0.3);color:var(--gn);">◉ MANAGER — Inventory management + member access</div>';
   else
     rb.innerHTML = '<div class="rb rb-u">◎ MEMBER — Your team dashboard</div>';
 
@@ -294,7 +306,7 @@ function renderInv() {
 }
 
 function renderInvMgmt() {
-  if (!isAdmin()) return;
+  if (!hasPerm('canManageInventory')) return;
   var el = document.getElementById('imSrch');
   var q  = el ? el.value.toLowerCase() : '';
   var f  = inventory.filter(function(i) { return i.name.toLowerCase().indexOf(q)>=0 || i.cat.toLowerCase().indexOf(q)>=0; });
@@ -431,7 +443,7 @@ function renderTeamView(el, tm) {
     h += '<div class="kc" style="border-top:2px solid '+cfg.bc+';"><div class="kch" style="color:'+cfg.hc+';">'+cfg.label+' ('+col.length+')</div>';
     col.forEach(function(t) {
       var isOwn    = cu && cu.id === t.userId;
-      var canEdit  = isOwn || isAdmin();
+      var canEdit  = isOwn || hasPerm('canModerateTasks');
       var nxtMap   = { upcoming:'→ Working RN', working:'→ Mark Done', done:'→ Reopen' };
       h += '<div class="tc '+t.status+'">'+
         '<div class="tc-n">'+t.task+'</div>'+
@@ -445,7 +457,7 @@ function renderTeamView(el, tm) {
           h += '<button class="cyc" onclick="cycleTask(\''+t.id+'\')">'+nxtMap.upcoming+'</button>';
         } else if (t.status === 'working') {
           h += '<button class="cyc" onclick="openDone(\''+t.id+'\')">'+nxtMap.working+'</button>';
-        } else if (t.status === 'done' && isAdmin()) {
+        } else if (t.status === 'done' && hasPerm('canModerateTasks')) {
           h += '<button class="cyc" onclick="reopenTask(\''+t.id+'\')">'+nxtMap.done+'</button>';
         }
         if (isOwn || isAdmin()) {
@@ -564,7 +576,7 @@ function populateTrFilters() {
 }
 
 function renderTReview() {
-  if (!isAdmin()) return;
+  if (!hasPerm('canViewAllTreasury') && !isAdmin()) return;
   var q  = document.getElementById('trSrch')  ? document.getElementById('trSrch').value.toLowerCase()  : '';
   var tf = document.getElementById('trTeam')  ? document.getElementById('trTeam').value   : '';
   var sf = document.getElementById('trStatus')? document.getElementById('trStatus').value : '';
@@ -581,7 +593,7 @@ function renderTReview() {
           '<td>'+tb(t.team)+'</td><td>'+t.userName+'</td>'+
           '<td>'+dlStr(t.deadline)+'</td>'+
           '<td>'+stBdg(t.status)+'</td>'+
-          '<td>'+(t.status==='pending'
+          '<td>'+(t.status==='pending' && hasPerm('canApproveTreasury')
             ? '<button class="btn-sm btn-g" onclick="updT(\''+t.id+'\',\'approved\')" style="margin-right:3px;">✓ Approve</button>'+
               '<button class="btn-sm btn-r" onclick="updT(\''+t.id+'\',\'rejected\')">✗ Reject</button>'
             : '')+
@@ -615,7 +627,7 @@ function renderLinks() {
         '<div class="link-cat">'+l.cat+'</div></div>'+
         '<div style="display:flex;align-items:center;gap:6px;">'+
         '<a class="link-open" href="'+l.url+'" target="_blank" rel="noopener">Open →</a>'+
-        (isAdmin() ? '<button class="btn-sm btn-r" onclick="delLink(\''+l.id+'\')">✕</button>' : '')+
+        (hasPerm('canAddLinks') ? '<button class="btn-sm btn-r" onclick="delLink(\''+l.id+'\')">✕</button>' : '')+
         '</div></div>';
     });
   });
@@ -643,9 +655,13 @@ function delLink(id) {
 
 function renderUsers() {
   if (!isMaster()) return;
+  var ss = 'background:var(--bg3);border:1px solid var(--bdr);border-radius:4px;padding:3px 6px;font-size:9px;color:var(--tx);font-family:inherit;outline:none;';
   document.getElementById('uTbl').innerHTML = USERS.map(function(u) {
-    var opts = TEAM_NAMES.map(function(t) {
+    var tOpts = TEAM_NAMES.map(function(t) {
       return '<option value="'+t+'"'+(u.team===t?' selected':'')+'>'+t+'</option>';
+    }).join('');
+    var rOpts = ['member','manager','admin'].map(function(r) {
+      return '<option value="'+r+'"'+(u.role===r?' selected':'')+'>'+r.toUpperCase()+'</option>';
     }).join('');
     return '<tr>'+
       '<td style="color:var(--ac);font-size:9px;">@'+u.username+'</td>'+
@@ -653,11 +669,51 @@ function renderUsers() {
       '<td><span style="font-size:9px;background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--tx2);">'+u.password+'</span></td>'+
       '<td>'+(u.role==='master'?'<span style="color:var(--tx3);font-size:8px;">—</span>':tb(u.team))+'</td>'+
       '<td>'+rb(u.role)+'</td>'+
-      '<td>'+(u.role!=='master'
-        ? '<select onchange="changeTeam(\''+u.id+'\',this.value)" style="background:var(--bg3);border:1px solid var(--bdr);border-radius:4px;padding:3px 6px;font-size:9px;color:var(--tx);font-family:inherit;outline:none;"><option value="">Change...</option>'+opts+'</select>'
-        : '')+'</td>'+
+      '<td>'+(u.role!=='master'?'<select onchange="changeTeam(\''+u.id+'\',this.value)" style="'+ss+'"><option value="">Change...</option>'+tOpts+'</select>':'')+'</td>'+
+      '<td>'+(u.role!=='master'?'<select onchange="changeRole(\''+u.id+'\',this.value)" style="'+ss+'">'+rOpts+'</select>':'')+'</td>'+
       '<td>'+(u.role!=='master'?'<button class="btn-sm btn-r" onclick="deleteUser(\''+u.id+'\')">✕</button>':'')+'</td></tr>';
   }).join('');
+  renderRolePerms();
+}
+
+function renderRolePerms() {
+  var el = document.getElementById('rolePermsPanel');
+  if (!el) return;
+  var PERM_LABELS = {
+    canApproveTreasury: 'Approve Treasury Requests',
+    canManageInventory: 'Manage Inventory (Add/Remove)',
+    canModerateTasks:   'Moderate Tasks (Edit/Delete any)',
+    canAddLinks:        'Add / Remove Links',
+    canViewAllTreasury: 'View All Teams Treasury',
+    canViewAllTeams:    'View All Teams Work Log',
+  };
+  var roles = ['admin','manager','member'];
+  var h = '<div style="overflow-x:auto;"><table><thead><tr><th>PERMISSION</th>';
+  roles.forEach(function(r){ h += '<th style="text-align:center;">'+r.toUpperCase()+'</th>'; });
+  h += '</tr></thead><tbody>';
+  Object.keys(PERM_LABELS).forEach(function(p) {
+    h += '<tr><td style="font-size:9px;color:var(--tx2);">'+PERM_LABELS[p]+'</td>';
+    roles.forEach(function(r) {
+      var checked = rolePerms[r] && rolePerms[r][p];
+      h += '<td style="text-align:center;"><input type="checkbox"'+(checked?' checked':'')+' onchange="togglePerm(\''+r+'\',\''+p+'\',this.checked)" style="cursor:pointer;width:14px;height:14px;accent-color:var(--ac);"/></td>';
+    });
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  el.innerHTML = '<div class="tw">'+h+'</div>';
+}
+
+function togglePerm(role, perm, val) {
+  if (!rolePerms[role]) rolePerms[role] = {};
+  rolePerms[role][perm] = val;
+  saveData();
+}
+
+function changeRole(id, role) {
+  if (!role) return;
+  var u = USERS.filter(function(x){ return x.id===id; })[0];
+  if (u) u.role = role;
+  saveData(); renderUsers();
 }
 
 function changeTeam(id, team) {
@@ -709,11 +765,11 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('sbNm').textContent = u.name;
   var mt = document.getElementById('sbMt');
   if (isMaster())     { mt.style.color = 'var(--gd)'; mt.textContent = 'MASTER ADMIN'; }
-  else if (isAdmin()) { mt.style.color = 'var(--ac)'; mt.textContent = 'ADMIN — ' + u.team; }
+  else if (isAdmin() || hasPerm('canManageInventory')) { mt.style.color = 'var(--ac)'; mt.textContent = 'ADMIN — ' + u.team; }
   else                { mt.style.color = 'var(--tx3)'; mt.textContent = 'MEMBER — ' + u.team; }
   document.getElementById('sbId').textContent = '@' + u.username;
 
-  if (isAdmin()) {
+  if (isAdmin() || hasPerm('canManageInventory')) {
     document.getElementById('aNL').style.display = 'block';
     document.getElementById('nIM').style.display = 'flex';
     document.getElementById('nTR').style.display = 'flex';
@@ -723,7 +779,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('mNL').style.display = 'block';
     document.getElementById('nUS').style.display = 'flex';
   }
-  document.getElementById('linkFormWrap').style.display = isAdmin() ? 'block' : 'none';
+  document.getElementById('linkFormWrap').style.display = hasPerm('canAddLinks') ? 'block' : 'none';
 
   var ut = document.getElementById('ut');
   ut.innerHTML = '';

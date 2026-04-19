@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RMS — RMI Resource Management System</title>
+<link rel="stylesheet" href="css/style.css"/>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#1C2132"/>
+</head>
+<body>
+<div class="app" id="appRoot">
+
+  <!-- LOGIN -->
+  <div id="loginScreen" class="lf">
+    <div class="lb">
+      <svg width="16" height="16" viewBox="0 0 60 60"><polygon points="30,4 56,18 56,42 30,56 4,42 4,18" fill="none" stroke="#3D4F6E" stroke-width="1.5"/><polygon points="30,14 46,23 46,37 30,46 14,37 14,23" fill="rgba(74,143,232,0.1)" stroke="#4A8FE8" stroke-width="1"/><circle cx="30" cy="30" r="3" fill="#4A8FE8"/></svg>
+      <span style="font-size:9px;color:var(--tx3);letter-spacing:2px;">RMS — RESOURCE MANAGEMENT SYSTEM</span>
+    </div>
+    <div class="lw">
+      <div class="lc">
+        <div class="ll">
+          <svg width="62" height="62" viewBox="0 0 100 100">
+            <polygon points="50,6 92,28 92,72 50,94 8,72 8,28" fill="#2A3450" stroke="#4A5F82" stroke-width="2"/>
+            <polygon points="50,20 78,34 78,66 50,80 22,66 22,34" fill="#232B3E" stroke="#4A8FE8" stroke-width="1.2"/>
+            <line x1="50" y1="6" x2="50" y2="94" stroke="#3D4F6E" stroke-width="0.8"/>
+            <line x1="8" y1="28" x2="92" y2="72" stroke="#3D4F6E" stroke-width="0.8"/>
+            <line x1="92" y1="28" x2="8" y2="72" stroke="#3D4F6E" stroke-width="0.8"/>
+            <polygon points="50,32 66,41 66,59 50,68 34,59 34,41" fill="rgba(74,143,232,0.12)" stroke="#4A8FE8" stroke-width="1"/>
+            <circle cx="50" cy="50" r="5.5" fill="#4A8FE8"/>
+            <circle cx="50" cy="50" r="2.5" fill="#1C2132"/>
+          </svg>
+          <div class="lrn">RMI</div>
+          <div class="lrs">ROBOTICS AND MACHINE INTELLIGENCE</div>
+          <div class="lrl"></div>
+          <div class="lan">RMS</div>
+        </div>
+        <div class="fl"><label>USERNAME</label><input id="lUn" placeholder="your username" autocomplete="username"/></div>
+        <div class="fl"><label>PASSWORD</label><input id="lPw" type="password" placeholder="••••••••" autocomplete="current-password"/></div>
+        <button class="lb2" onclick="doLogin()">SIGN IN</button>
+        <div class="le" id="lErr"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="mainApp" style="display:none;">
+    <div class="sb">
+      <div class="sb-hdr">
+        <svg width="26" height="26" viewBox="0 0 60 60"><polygon points="30,3 56,16 56,44 30,57 4,44 4,16" fill="#2A3450" stroke="#4A5F82" stroke-width="1.2"/><polygon points="30,14 46,22 46,38 30,46 14,38 14,22" fill="#1C2132" stroke="#4A8FE8" stroke-width="0.8"/><line x1="30" y1="3" x2="30" y2="57" stroke="#3D4F6E" stroke-width="0.6"/><line x1="4" y1="16" x2="56" y2="44" stroke="#3D4F6E" stroke-width="0.6"/><line x1="56" y1="16" x2="4" y2="44" stroke="#3D4F6E" stroke-width="0.6"/><circle cx="30" cy="30" r="4" fill="#4A8FE8"/><circle cx="30" cy="30" r="2" fill="#161D2E"/></svg>
+        <div><div class="sb-appname">RMS</div><div class="sb-appsub">RMI MGMT SYSTEM</div></div>
+      </div>
+      <div class="nl">MAIN</div>
+      <div class="ni on" data-panel="dashboard">◈ &nbsp;DASHBOARD</div>
+      <div class="ni" data-panel="inventory">▣ &nbsp;INVENTORY</div>
+      <div class="ni" data-panel="work">◩ &nbsp;WORK LOG</div>
+      <div class="ni" data-panel="treasury">◎ &nbsp;TREASURY</div>
+      <div class="ni" data-panel="links">⊕ &nbsp;LINKS</div>
+      <div class="nl" id="aNL" style="display:none;">ADMIN</div>
+      <div class="ni" id="nIM" data-panel="invmgmt" style="display:none;">⊞ &nbsp;INV MGMT</div>
+      <div class="ni" id="nTR" data-panel="treview" style="display:none;">◎ &nbsp;TREASURY REVIEW</div>
+      <div class="nl" id="mNL" style="display:none;">MASTER</div>
+      <div class="ni" id="nUS" data-panel="users" style="display:none;">◐ &nbsp;USERS</div>
+      <div class="sb-ft">
+        <div class="sb-nm" id="sbNm">—</div>
+        <div class="sb-mt" id="sbMt">—</div>
+        <div class="sb-id" id="sbId">—</div>
+        <div class="sb-lo" onclick="doLogout()">[ LOGOUT ]</div>
+      </div>
+    </div>
+
+    <div class="mn">
+      <div class="tpb">
+        <div class="tpb-l">
+          <svg width="14" height="14" viewBox="0 0 60 60"><polygon points="30,3 56,16 56,44 30,57 4,44 4,16" fill="none" stroke="#4A5F82" stroke-width="1.5"/><circle cx="30" cy="30" r="4" fill="#4A8FE8"/></svg>
+          <span class="tpb-t" id="topT">DASHBOARD</span>
+          <div class="tpb-d"></div>
+          <span class="tpb-s">RMI — ROBOTICS AND MACHINE INTELLIGENCE</span>
+        </div>
+        <span class="onl">● ONLINE</span>
+      </div>
+      <div class="ct">
+        <div class="pn on" id="pn-dashboard"><div id="roleBanner"></div><div id="dashContent"></div></div>
+        <div class="pn" id="pn-inventory">
+          <div class="sb2"><span style="color:var(--tx3);">⌕</span><input id="invSrch" placeholder="Search components..." oninput="renderInv()"/></div>
+          <div id="oobBanner" style="display:none;" class="oob">⚠ Some components are currently being used outside the SAC building</div>
+          <div id="invG"></div>
+          <div class="sc">MY TEAM'S TRANSACTIONS</div>
+          <div class="tw"><table><thead><tr><th>COMPONENT</th><th>QTY</th><th>AS</th><th>LOCATION</th><th>BY</th><th>TIME</th></tr></thead><tbody id="myTxn"></tbody></table></div>
+        </div>
+        <div class="pn" id="pn-invmgmt">
+          <div class="fc">
+            <div class="sc" style="margin-bottom:9px;">ADD COMPONENT</div>
+            <div class="fr4">
+              <div class="fg"><label>NAME</label><input id="ia-n" placeholder="Servo SG90"/></div>
+              <div class="fg"><label>QTY</label><input id="ia-q" type="number" placeholder="0"/></div>
+              <div class="fg"><label>UNIT</label><select id="ia-u"><option>pcs</option><option>m</option><option>cm</option><option>kg</option><option>g</option><option>ml</option><option>l</option></select></div>
+              <div class="fg"><label>CATEGORY</label><select id="ia-c"><option>Electronics</option><option>Mechanical</option><option>Sensors</option><option>Power</option><option>Fasteners</option><option>Tools</option><option>Materials</option><option>Other</option></select></div>
+            </div>
+            <button class="btn" onclick="addComp()">ADD COMPONENT</button>
+          </div>
+          <div class="sb2"><span style="color:var(--tx3);">⌕</span><input id="imSrch" placeholder="Search..." oninput="renderInvMgmt()"/></div>
+          <div id="imG"></div>
+        </div>
+        <div class="pn" id="pn-work"><div id="wkList"></div><div id="wkView" style="display:none;"></div></div>
+        <div class="pn" id="pn-treasury">
+          <div class="fc">
+            <div class="sc" style="margin-bottom:9px;">SUBMIT FUND REQUEST</div>
+            <div class="fr2">
+              <div class="fg"><label>PURPOSE / ITEM</label><input id="tp" placeholder="e.g. Arduino Mega"/></div>
+              <div class="fg"><label>AMOUNT (₹)</label><input id="ta" type="number" placeholder="0"/></div>
+            </div>
+            <div class="fr2">
+              <div class="fg"><label>DEADLINE</label><input id="td" type="date"/></div>
+              <div class="fg"><label>NOTES</label><input id="tn" placeholder="Reason / vendor"/></div>
+            </div>
+            <button class="btn" onclick="addTreasury()">SUBMIT REQUEST</button>
+          </div>
+          <div class="sc">MY REQUESTS</div>
+          <div class="tw"><table><thead><tr><th>ID</th><th>PURPOSE</th><th>AMOUNT</th><th>DEADLINE</th><th>STATUS</th><th></th></tr></thead><tbody id="myTrTbl"></tbody></table></div>
+        </div>
+        <div class="pn" id="pn-treview">
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <div class="sb2" style="flex:1;min-width:120px;"><span style="color:var(--tx3);">⌕</span><input id="trSrch" placeholder="Search requests..." oninput="renderTReview()"/></div>
+            <select id="trTeam" onchange="renderTReview()" class="filter-sel"><option value="">ALL TEAMS</option></select>
+            <select id="trStatus" onchange="renderTReview()" class="filter-sel"><option value="">ALL STATUS</option><option value="pending">PENDING</option><option value="approved">APPROVED</option><option value="rejected">REJECTED</option></select>
+          </div>
+          <div class="tw"><table><thead><tr><th>ID</th><th>PURPOSE</th><th>AMOUNT</th><th>TEAM</th><th>BY</th><th>DEADLINE</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody id="trTbl"></tbody></table></div>
+        </div>
+        <div class="pn" id="pn-links">
+          <div class="fc" id="linkFormWrap" style="display:none;">
+            <div class="sc" style="margin-bottom:9px;">ADD LINK</div>
+            <div class="fr2">
+              <div class="fg"><label>TITLE</label><input id="lk-t" placeholder="e.g. Reimbursement Form"/></div>
+              <div class="fg"><label>URL</label><input id="lk-u" placeholder="https://..."/></div>
+            </div>
+            <div class="fr2">
+              <div class="fg"><label>DESCRIPTION</label><input id="lk-d" placeholder="Brief description"/></div>
+              <div class="fg"><label>CATEGORY</label><select id="lk-c"><option>Finance</option><option>Forms</option><option>Alumni</option><option>Resources</option><option>Competition</option><option>Other</option></select></div>
+            </div>
+            <button class="btn" onclick="addLink()">ADD LINK</button>
+          </div>
+          <div id="linksContent"></div>
+        </div>
+        <div class="pn" id="pn-users">
+          <div class="fc">
+            <div class="sc" style="margin-bottom:9px;">CREATE USER ACCOUNT</div>
+            <div class="fr3">
+              <div class="fg"><label>FULL NAME</label><input id="un" placeholder="e.g. Sneha L."/></div>
+              <div class="fg"><label>USERNAME</label><input id="uu" placeholder="e.g. sneha"/></div>
+              <div class="fg"><label>PASSWORD</label><input id="upw" placeholder="password"/></div>
+            </div>
+            <div class="fr3">
+              <div class="fg"><label>ASSIGN TEAM</label><select id="ut"></select></div>
+              <div class="fg"><label>ROLE</label><select id="ur"><option value="member">MEMBER</option><option value="admin">ADMIN</option></select></div>
+              <div style="display:flex;align-items:flex-end;"><button class="btn" onclick="createUser()">CREATE</button></div>
+            </div>
+            <div id="ucMsg" style="font-size:9px;color:var(--gn);margin-top:6px;min-height:13px;"></div>
+          </div>
+          <div class="sc">ALL USERS — CREDENTIALS VISIBLE TO MASTER ADMIN ONLY</div>
+          <div class="tw"><table><thead><tr><th>USERNAME</th><th>NAME</th><th>PASSWORD</th><th>TEAM</th><th>ROLE</th><th>CHANGE TEAM</th><th></th></tr></thead><tbody id="uTbl"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BORROW MODAL -->
+  <div id="borrowModal" style="display:none;" class="mo">
+    <div class="mb">
+      <div class="mt">BORROW COMPONENT</div>
+      <div class="fg" style="margin-bottom:7px;"><label>COMPONENT</label><input id="mc" readonly style="opacity:0.6;"/></div>
+      <div class="fg" style="margin-bottom:7px;"><label>AVAILABLE STOCK</label><input id="ms" readonly style="opacity:0.6;"/></div>
+      <div class="fg" style="margin-bottom:7px;"><label>QUANTITY TO TAKE</label><input id="mq" type="number" min="1" placeholder="0"/></div>
+      <div class="fg" style="margin-bottom:7px;"><label>BORROWING AS</label><select id="mb2"><option value="team">TEAM (shared)</option><option value="individual">INDIVIDUAL</option></select></div>
+      <div class="fg" style="margin-bottom:7px;"><label>LOCATION</label><select id="ml" onchange="chkOOB()"><option value="inside">INSIDE SAC</option><option value="outside">OUTSIDE SAC ⚠</option><option value="competition">COMPETITION ⚠</option><option value="lab">LAB / WORKSHOP</option></select></div>
+      <div class="mw" id="mwrn">⚠ Component will be flagged as Out of SAC</div>
+      <div style="display:flex;gap:7px;margin-top:5px;"><button class="btn" onclick="confirmBorrow()">CONFIRM</button><button class="btn-sm" onclick="closeBorrow()">CANCEL</button></div>
+      <div id="merr" style="font-size:8px;color:var(--rd);margin-top:6px;min-height:12px;"></div>
+    </div>
+  </div>
+
+  <!-- DONE MODAL -->
+  <div id="doneModal" style="display:none;" class="mo">
+    <div class="mb">
+      <div class="mt">MARK TASK AS DONE</div>
+      <div style="font-size:10px;color:var(--tx2);margin-bottom:12px;">Completion timestamp will be recorded automatically.</div>
+      <div style="background:var(--gnbg);border:1px solid rgba(46,170,130,0.3);border-radius:6px;padding:9px;font-size:9px;color:var(--gn);margin-bottom:12px;" id="doneTimeDisp"></div>
+      <div style="display:flex;gap:7px;"><button class="btn" onclick="confirmDone()">CONFIRM DONE</button><button class="btn-sm" onclick="closeDone()">CANCEL</button></div>
+    </div>
+  </div>
+
+</div>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

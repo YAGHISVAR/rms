@@ -734,14 +734,32 @@ function createUser(){
       document.getElementById('un').value='';
       document.getElementById('uu').value='';
       document.getElementById('upw').value='';
-      document.getElementById('ucMsg').textContent='✓ Created — @'+un+' / '+pw;
-      setTimeout(function(){document.getElementById('ucMsg').textContent='';},5000);
-      showToast('User created!','success');
-      loadAllData(renderUsers);
-    }).catch(function(e){
-      console.error(e);
-      document.getElementById('ucMsg').textContent='Error creating user. Try again.';
-    });
+      documfunction createUser(){
+  var n=document.getElementById('un').value.trim();
+  var un=document.getElementById('uu').value.trim().toLowerCase();
+  var pw=document.getElementById('upw').value.trim();
+  if(!n||!un||!pw){document.getElementById('ucMsg').textContent='Fill all fields';return;}
+  sbGet('users','username=eq.'+encodeURIComponent(un)).then(function(existing){
+    if(existing&&existing.length){
+      document.getElementById('ucMsg').textContent='Username already taken';return;
+    }
+    var id='USR-'+String(Date.now()).slice(-8);
+    var u={id:id,name:n,username:un,password:pw,
+      team:document.getElementById('ut').value,
+      role:document.getElementById('ur').value};
+    return sbPost('users',u);
+  }).then(function(res){
+    if(!res)return;
+    document.getElementById('un').value='';
+    document.getElementById('uu').value='';
+    document.getElementById('upw').value='';
+    document.getElementById('ucMsg').textContent='✓ Created — @'+un+' / '+pw;
+    setTimeout(function(){document.getElementById('ucMsg').textContent='';},5000);
+    showToast('User created!','success');
+    loadAllData(renderUsers);
+  }).catch(function(e){
+    console.error(e);
+    document.getElementById('ucMsg').textContent='Error creating user. Try again.';
   });
 }
 

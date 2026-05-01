@@ -76,33 +76,16 @@ function TEAMS(){
   return out.sort();
 }
 
-/* ── AUTH ────────────────────────────────────────────────── */
-// Login queries Supabase directly — no dependency on local USERS array
 function doLogin(){
   var un=document.getElementById('lUn').value.trim().toLowerCase();
   var pw=document.getElementById('lPw').value;
   if(!un||!pw){document.getElementById('lErr').textContent='Enter username and password.';return;}
-  document.getElementById('lErr').textContent='';
+  document.getElementById('lErr').textContent='Connecting...';
   showLoader(true);
 
-  // First load role permissions, then check login
-  sbGet('role_perms').then(function(rp){
-    rolePerms={};
-    (rp||[]).forEach(function(r){
-      rolePerms[r.role]={
-        label:              r.label,
-        canApproveTreasury: r.can_approve_treasury,
-        canManageInventory: r.can_manage_inventory,
-        canModerateTasks:   r.can_moderate_tasks,
-        canAddLinks:        r.can_add_links,
-        canViewAllTreasury: r.can_view_all_treasury,
-        canViewAllTeams:    r.can_view_all_teams
-      };
-    });
-    // Now fetch the user
-    return sbGet('users','username=eq.'+encodeURIComponent(un));
-  }).then(function(res){
+  sbGet('users','username=eq.'+encodeURIComponent(un)+'&limit=1').then(function(res){
     showLoader(false);
+    document.getElementById('lErr').textContent='';
     if(!res||!res.length){
       document.getElementById('lErr').textContent='Invalid username or password.';
       return;
@@ -116,9 +99,10 @@ function doLogin(){
     saveSession(u.username);
     showMainApp(u);
     loadAllData(renderAll);
-  }).catch(function(){
+  }).catch(function(e){
     showLoader(false);
-    document.getElementById('lErr').textContent='Connection error. Try again.';
+    console.error('Login error:',e);
+    document.getElementById('lErr').textContent='Invalid username or password.';
   });
 }
 

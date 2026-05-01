@@ -168,7 +168,19 @@ function goto(name,el){
   if(name==='work')renderWork();else renderAll();
 }
 
-function renderAll(){renderDash();renderInv();renderInvMgmt();renderTReview();renderLinks();renderUsers();renderMyTreasury();}
+function renderAll(){ updateSidebarForRole(); renderDash(); renderInv(); renderInvMgmt(); renderTReview(); renderLinks(); renderUsers(); renderMyTreasury(); }
+
+function updateSidebarForRole(){
+  if(!cu) return;
+  if(isAdmin()||hasPerm('canManageInventory')){
+    document.getElementById('aNL').style.display='block';
+    document.getElementById('nIM').style.display='flex';
+  }
+  if(isAdmin()||hasPerm('canViewAllTreasury')){
+    document.getElementById('nTR').style.display='flex';
+    populateTrFilters();
+  }
+}
 
 /* ── DASHBOARD ── */
 function renderDash(){

@@ -107,11 +107,12 @@ function showMainApp(u){
   else if(u.role==='manager'){mt.style.color='var(--gn)'; mt.textContent='MANAGER — '+u.team;}
   else                       {mt.style.color='var(--tx3)';mt.textContent='MEMBER — '+u.team;}
   document.getElementById('sbId').textContent='@'+u.username;
-  if(isAdmin()||hasPerm('canManageInventory')){
+  if(isAdmin()){
     document.getElementById('aNL').style.display='block';
     document.getElementById('nIM').style.display='flex';
+    document.getElementById('nTR').style.display='flex';
+    populateTrFilters();
   }
-  if(isAdmin()){document.getElementById('nTR').style.display='flex'; populateTrFilters();}
   if(isMaster()){document.getElementById('mNL').style.display='block'; document.getElementById('nUS').style.display='flex';}
   document.getElementById('linkFormWrap').style.display=hasPerm('canAddLinks')?'block':'none';
   var ut=document.getElementById('ut'); ut.innerHTML='';

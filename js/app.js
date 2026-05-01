@@ -721,17 +721,27 @@ function createUser(){
   if(USERS.filter(function(u){return u.username===un;}).length){
     document.getElementById('ucMsg').textContent='Username already taken';return;
   }
-  userCount++;
-  var id='USR-'+String(userCount).padStart(4,'0');
-  var u={id:id,name:n,username:un,password:pw,team:document.getElementById('ut').value,role:document.getElementById('ur').value};
-  sbPost('users',u).then(function(){
-    document.getElementById('un').value='';
-    document.getElementById('uu').value='';
-    document.getElementById('upw').value='';
-    document.getElementById('ucMsg').textContent='✓ Created — @'+un+' / '+pw;
-    setTimeout(function(){document.getElementById('ucMsg').textContent='';},5000);
-    showToast('User created!','success');
-    loadAllData(renderUsers);
+  // Check against Supabase directly to avoid stale local data
+  sbGet('users','username=eq.'+encodeURIComponent(un)).then(function(existing){
+    if(existing&&existing.length){
+      document.getElementById('ucMsg').textContent='Username already taken';return;
+    }
+    var id='USR-'+String(Date.now()).slice(-6);
+    var u={id:id,name:n,username:un,password:pw,
+      team:document.getElementById('ut').value,
+      role:document.getElementById('ur').value};
+    sbPost('users',u).then(function(){
+      document.getElementById('un').value='';
+      document.getElementById('uu').value='';
+      document.getElementById('upw').value='';
+      document.getElementById('ucMsg').textContent='✓ Created — @'+un+' / '+pw;
+      setTimeout(function(){document.getElementById('ucMsg').textContent='';},5000);
+      showToast('User created!','success');
+      loadAllData(renderUsers);
+    }).catch(function(e){
+      console.error(e);
+      document.getElementById('ucMsg').textContent='Error creating user. Try again.';
+    });
   });
 }
 

@@ -85,8 +85,23 @@ function doLogin(){
   document.getElementById('lErr').textContent='';
   showLoader(true);
 
-  // Fetch this specific user from Supabase
-  sbGet('users','username=eq.'+encodeURIComponent(un)).then(function(res){
+  // First load role permissions, then check login
+  sbGet('role_perms').then(function(rp){
+    rolePerms={};
+    (rp||[]).forEach(function(r){
+      rolePerms[r.role]={
+        label:              r.label,
+        canApproveTreasury: r.can_approve_treasury,
+        canManageInventory: r.can_manage_inventory,
+        canModerateTasks:   r.can_moderate_tasks,
+        canAddLinks:        r.can_add_links,
+        canViewAllTreasury: r.can_view_all_treasury,
+        canViewAllTeams:    r.can_view_all_teams
+      };
+    });
+    // Now fetch the user
+    return sbGet('users','username=eq.'+encodeURIComponent(un));
+  }).then(function(res){
     showLoader(false);
     if(!res||!res.length){
       document.getElementById('lErr').textContent='Invalid username or password.';
@@ -103,7 +118,7 @@ function doLogin(){
     loadAllData(renderAll);
   }).catch(function(){
     showLoader(false);
-    document.getElementById('lErr').textContent='Connection error. Check internet.';
+    document.getElementById('lErr').textContent='Connection error. Try again.';
   });
 }
 

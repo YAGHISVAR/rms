@@ -1,6 +1,5 @@
 /* ============================================================
    RMS — data.js  |  Supabase Cloud Database
-   All data is now stored in Supabase — shared across all devices.
    ============================================================ */
 
 var SUPABASE_URL = 'https://ejhocvrxgznjypqyhujv.supabase.co';
@@ -9,47 +8,33 @@ var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 var TEAM_NAMES = ['ROVIO','DRONE','BARNES','AMR','CORE','OMEGA'];
 
 var TEAM_COLORS = {
-  ROVIO:'#4A8FE8', DRONE:'#2EAA82', BARNES:'#D4920A',
-  AMR:'#E05252',   CORE:'#9B6FD4',  OMEGA:'#2EA8C4',
-  ALPHA:'#4A8FE8', BETA:'#2EAA82',  GAMMA:'#D4920A',
-  DELTA:'#E05252', SIGMA:'#9B6FD4', ZETA:'#D4629B',
-  ETA:'#5EAA3C',   THETA:'#C47A2E', IOTA:'#4A70C8',
-  KAPPA:'#2E9E7A', LAMBDA:'#C45252'
+  ROVIO:'#3B82F6', DRONE:'#10B981', BARNES:'#F59E0B',
+  AMR:'#EF4444',   CORE:'#8B5CF6',  OMEGA:'#06B6D4',
+  GENERAL:'#6B7280'
 };
 
+/* ── THEME ── */
+function getTheme(){ return localStorage.getItem('rms_theme')||'dark'; }
+function setTheme(t){
+  localStorage.setItem('rms_theme',t);
+  document.documentElement.setAttribute('data-theme',t);
+  var btn=document.getElementById('themeToggle');
+  if(btn) btn.textContent = t==='dark' ? '☀ Light' : '☾ Dark';
+}
+function toggleTheme(){ setTheme(getTheme()==='dark'?'light':'dark'); }
+
+/* ── SUPABASE ── */
 function sbFetch(method, table, body, query) {
   var url = SUPABASE_URL + '/rest/v1/' + table + (query ? '?' + query : '');
-  var opts = {
-    method: method,
-    headers: {
-      'apikey':        SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type':  'application/json',
-      'Prefer':        method === 'POST' ? 'return=representation' : 'return=minimal'
-    }
-  };
-  if (body) opts.body = JSON.stringify(body);
-  return fetch(url, opts).then(function(r) {
-    return r.text().then(function(t) {
-      if (!t) return [];
-      try { return JSON.parse(t); } catch(e) { return []; }
-    });
-  });
-}
-
-function sbGet(table, query)     { return sbFetch('GET',   table, null, query || 'order=id'); }
-function sbPost(table, body)     { return sbFetch('POST',  table, body); }
-function sbPatch(table, body, q) {
-  var url = SUPABASE_URL + '/rest/v1/' + table + (q ? '?' + q : '');
   return fetch(url, {
-    method: 'PATCH',
+    method: method,
     headers: {
       'apikey':        SUPABASE_KEY,
       'Authorization': 'Bearer ' + SUPABASE_KEY,
       'Content-Type':  'application/json',
       'Prefer':        'return=representation'
     },
-    body: JSON.stringify(body)
+    body: body ? JSON.stringify(body) : undefined
   }).then(function(r) {
     return r.text().then(function(t) {
       if (!t) return [];
@@ -57,17 +42,14 @@ function sbPatch(table, body, q) {
     });
   });
 }
+
+function sbGet(table, query)     { return sbFetch('GET',   table, null, query||'order=id'); }
+function sbPost(table, body)     { return sbFetch('POST',  table, body); }
+function sbPatch(table, body, q) { return sbFetch('PATCH', table, body, q); }
 function sbDelete(table, query)  { return sbFetch('DELETE',table, null, query); }
 
-var USERS        = [];
-var inventory    = [];
-var transactions = [];
-var tasks        = [];
-var treasury     = [];
-var links        = [];
-var rolePerms    = {};
-var userCount    = 0;
-var cu           = null;
+/* ── LIVE DATA ── */
+var USERS=[], inventory=[], transactions=[], tasks=[], treasury=[], links=[], rolePerms={}, userCount=0, cu=null;
 
 function loadAllData(callback) {
   showLoader(true);
@@ -80,15 +62,15 @@ function loadAllData(callback) {
     sbGet('links'),
     sbGet('role_perms')
   ]).then(function(res) {
-    USERS        = res[0] || [];
-    inventory    = res[1] || [];
-    transactions = res[2] || [];
-    tasks        = res[3] || [];
-    treasury     = res[4] || [];
-    links        = res[5] || [];
+    USERS        = res[0]||[];
+    inventory    = res[1]||[];
+    transactions = res[2]||[];
+    tasks        = res[3]||[];
+    treasury     = res[4]||[];
+    links        = res[5]||[];
     rolePerms    = {};
-    (res[6] || []).forEach(function(rp) {
-      rolePerms[rp.role] = {
+    (res[6]||[]).forEach(function(rp){
+      rolePerms[rp.role]={
         label:              rp.label,
         canApproveTreasury: rp.can_approve_treasury,
         canManageInventory: rp.can_manage_inventory,
@@ -98,41 +80,35 @@ function loadAllData(callback) {
         canViewAllTeams:    rp.can_view_all_teams
       };
     });
-    userCount = USERS.length;
+    userCount=USERS.length;
     showLoader(false);
-    if (callback) callback();
-  }).catch(function(e) {
-    console.error('Load error:', e);
+    if(callback) callback();
+  }).catch(function(e){
+    console.error('Load error:',e);
     showLoader(false);
-    // Don't show error toast — just render with whatever loaded
-    if (callback) callback();
+    if(callback) callback();
   });
 }
 
-function showLoader(show) {
-  var el = document.getElementById('globalLoader');
-  if (el) el.style.display = show ? 'flex' : 'none';
+function showLoader(show){
+  var el=document.getElementById('globalLoader');
+  if(el) el.style.display=show?'flex':'none';
 }
 
-function showToast(msg, type) {
-  var t = document.createElement('div');
-  t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);' +
-    'background:'+(type==='error'?'#E05252':'#2EAA82')+';color:#fff;padding:8px 16px;' +
-    'border-radius:6px;font-size:10px;font-family:Courier New,monospace;z-index:9999;letter-spacing:0.5px;';
-  t.textContent = msg;
+function showToast(msg,type){
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);'+
+    'background:'+(type==='error'?'var(--rd)':'var(--gn)')+';color:#fff;padding:9px 18px;'+
+    'border-radius:8px;font-size:11px;font-family:inherit;z-index:9999;letter-spacing:0.3px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+  t.textContent=msg;
   document.body.appendChild(t);
-  setTimeout(function() { t.remove(); }, 3000);
+  setTimeout(function(){t.remove();},3000);
 }
 
-function newId(prefix, arr) {
-  var max = 0;
-  arr.forEach(function(x) {
-    var n = parseInt((x.id || '').replace(prefix+'-','')) || 0;
-    if (n > max) max = n;
-  });
-  return prefix + '-' + String(max + 1).padStart(3,'0');
+function newId(prefix,arr){
+  return prefix+'-'+String(Date.now()).slice(-8);
 }
 
-function saveSession(username) { localStorage.setItem('rms_session', username); }
-function clearSession()        { localStorage.removeItem('rms_session'); }
-function getSavedSession()     { return localStorage.getItem('rms_session'); }
+function saveSession(u){ localStorage.setItem('rms_session',u); }
+function clearSession(){ localStorage.removeItem('rms_session'); }
+function getSavedSession(){ return localStorage.getItem('rms_session'); }

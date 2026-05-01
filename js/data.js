@@ -85,9 +85,10 @@ function loadAllData(callback) {
     showLoader(false);
     if (callback) callback();
   }).catch(function(e) {
-    showLoader(false);
     console.error('Load error:', e);
-    showToast('Connection error. Check internet.', 'error');
+    showLoader(false);
+    // Don't show error toast — just render with whatever loaded
+    if (callback) callback();
   });
 }
 

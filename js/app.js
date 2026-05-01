@@ -770,3 +770,8 @@ function deleteUser(id){
     loadAllData(renderUsers);
   });
 }
+
+// Ping Supabase every 5 days to prevent auto-pause
+setInterval(function(){
+  sbGet('users','limit=1').catch(function(){});
+}, 1000 * 60 * 60 * 24 * 5);

@@ -688,13 +688,21 @@ var PERM_DB_MAP={
   canViewAllTeams:'can_view_all_teams'
 };
 
-function togglePerm(role,perm,val){
-  if(!rolePerms[role])rolePerms[role]={};
+function togglePerm(role, perm, val){
+  if(!rolePerms[role]) rolePerms[role]={};
   rolePerms[role][perm]=val;
-  var patch={};patch[PERM_DB_MAP[perm]]=val;
-  sbPatch('role_perms',patch,'role=eq.'+role).then(function(){
-    showToast('Permission updated','success');
-  });
+  var patch={};
+  patch[PERM_DB_MAP[perm]]=val;
+  sbPatch('role_perms', patch, 'role=eq.'+encodeURIComponent(role))
+    .then(function(){
+      showToast('Permission updated!','success');
+      // Reload to confirm change saved
+      loadAllData(renderAll);
+    })
+    .catch(function(e){
+      console.error('Perm update failed:',e);
+      showToast('Failed to update permission','error');
+    });
 }
 
 function changeTeam(id,team){

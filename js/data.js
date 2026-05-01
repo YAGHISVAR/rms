@@ -39,7 +39,24 @@ function sbFetch(method, table, body, query) {
 
 function sbGet(table, query)     { return sbFetch('GET',   table, null, query || 'order=id'); }
 function sbPost(table, body)     { return sbFetch('POST',  table, body); }
-function sbPatch(table, body, q) { return sbFetch('PATCH', table, body, q); }
+function sbPatch(table, body, q) {
+  var url = SUPABASE_URL + '/rest/v1/' + table + (q ? '?' + q : '');
+  return fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'apikey':        SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type':  'application/json',
+      'Prefer':        'return=representation'
+    },
+    body: JSON.stringify(body)
+  }).then(function(r) {
+    return r.text().then(function(t) {
+      if (!t) return [];
+      try { return JSON.parse(t); } catch(e) { return []; }
+    });
+  });
+}
 function sbDelete(table, query)  { return sbFetch('DELETE',table, null, query); }
 
 var USERS        = [];
